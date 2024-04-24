@@ -127,15 +127,15 @@ module time_view
     sclk #(1) second_clk(.clk(clk), .rst(rst), .sec_clk(sec_clk));
 
     // convert bcd to binary for setting hours time
-    wire[3:0] in_htime;
-    assign in_htime = stime[18] * 10 + stime[17:14];
+    //wire[3:0] in_htime;
+    //assign in_htime = stime[18] * 10 + stime[17:14];
 
     // convert binary to bcd for output hours time
-    wire[3:0] bin_htime;
-    wire[3:0] htime_12h = bin_htime >= 12 ? (bin_htime > 10 ? bin_htime : bin_htime - 9) : bin_htime - 12;
+    //wire[3:0] bin_htime;
+    //wire[3:0] htime_12h = bin_htime >= 12 ? (bin_htime > 10 ? bin_htime : bin_htime - 9) : bin_htime - 12;
 
 
-    assign hh_mm_ss[17:14] = bin_htime > 20 ? (bin_htime > 10 ? bin_htime : bin_htime - 9) : bin_htime - 20;
+    //assign hh_mm_ss[17:14] = bin_htime > 20 ? (bin_htime > 10 ? bin_htime : bin_htime - 9) : bin_htime - 20;
 
     bcd_counter #(9) s0(.trigger(sec_clk),    .rst(rst), .set(set_time), .set_value(stime[3:0]), .counter(hh_mm_ss[3:0]), .overflow(bcd_clk[0]));
     bcd_counter #(5) s1(.trigger(bcd_clk[0]), .rst(rst), .set(set_time), .set_value(stime[6:4]), .counter(hh_mm_ss[6:4]), .overflow(bcd_clk[1]));
@@ -143,7 +143,7 @@ module time_view
     bcd_counter #(9) m0(.trigger(bcd_clk[1]), .rst(rst), .set(set_time), .set_value(stime[10: 7]), .counter(hh_mm_ss[10: 7]), .overflow(bcd_clk[2]));
     bcd_counter #(5) m1(.trigger(bcd_clk[2]), .rst(rst), .set(set_time), .set_value(stime[13:11]), .counter(hh_mm_ss[13:11]), .overflow(bcd_clk[3]));
 
-    bcd_counter #(23) h0(.trigger(bcd_clk[4]), .rst(rst), .set(set_time), .set_value(in_htime), .counter(bin_htime), .overflow(bcd_clk[2]));
+    //bcd_counter #(23) h0(.trigger(bcd_clk[4]), .rst(rst), .set(set_time), .set_value(in_htime), .counter(bin_htime), .overflow(bcd_clk[2]));
 
 //    always @ (posedge clk) begin
 //        if(rst) begin

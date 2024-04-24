@@ -23,60 +23,60 @@ module setFSM #(
     // Synchronize inputs with the clock domain
     reg nextbutton_sync, button1_sync, button2_sync;
 
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         nextbutton_sync <= 1'b0;
-    //     else
-    //         nextbutton_sync <= nextbutton;
-    // end
-
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         button1_sync <= 1'b0;
-    //     else
-    //         button1_sync <= button1;
-    // end
-
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         button2_sync <= 1'b0;
-    //     else
-    //         button2_sync <= button2;
-    // end
-
-    // // Set isnext when nextbutton is pressed
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         isnext <= 0;
-    //     else if (nextbutton_sync)
-    //         isnext <= 1;
-    // end
-
-    // // Set isbutton1 when button1 is pressed
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         isbutton1 <= 0;
-    //     else if (button1_sync)
-    //         isbutton1 <= 1;
-    // end
-
-    // // Set isbutton2 when button2 is pressed
-    // always @(posedge clk or posedge reset) begin
-    //     if (reset)
-    //         isbutton2 <= 0;
-    //     else if (button2_sync)
-    //         isbutton2 <= 1;
-    // end
-
-    always @(posedge nextbutton) begin
-        isnext <= 1;
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            nextbutton_sync <= 1'b0;
+        else
+            nextbutton_sync <= nextbutton;
     end
-    always @(posedge button1) begin
-        isbutton1 <= 1;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            button1_sync <= 1'b0;
+        else
+            button1_sync <= button1;
     end
-    always @(posedge button2) begin
-        isbutton2 <= 1;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            button2_sync <= 1'b0;
+        else
+            button2_sync <= button2;
     end
+
+    // Set isnext when nextbutton is pressed
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            isnext <= 0;
+        else if (nextbutton_sync)
+            isnext <= 1;
+    end
+
+    // Set isbutton1 when button1 is pressed
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            isbutton1 <= 0;
+        else if (button1_sync)
+            isbutton1 <= 1;
+    end
+
+    // Set isbutton2 when button2 is pressed
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            isbutton2 <= 0;
+        else if (button2_sync)
+            isbutton2 <= 1;
+    end
+
+    // always @(posedge nextbutton) begin
+    //     isnext <= 1;
+    // end
+    // always @(posedge button1) begin
+    //     isbutton1 <= 1;
+    // end
+    // always @(posedge button2) begin
+    //     isbutton2 <= 1;
+    // end
 
 
     always @(posedge clk or posedge reset) begin
