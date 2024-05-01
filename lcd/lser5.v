@@ -128,11 +128,6 @@ module bcd_counter#(
     output reg[3:0] counter,
     output reg overflow
 );
-    always @ (rst) begin
-        counter <= 0;
-        overflow <= 0;
-    end
-
     always @ (posedge trigger) begin : BCD_COUNT
         if(set) begin
             counter <= set_value;
@@ -190,11 +185,6 @@ module hour_counter
 
     bin_to_bcd binToBCD(.binary(hr_mode), .d1(h1), .d0(h0));
     bcd_to_bin bcdToBinSET(.d1(set_h1), .d0(set_h0), .binary(set_hr));
-
-    always @ (rst) begin
-        hr_counter <= 0;
-        overflow <= 0;
-    end
 
     always @ (posedge trigger) begin : BCD_COUNT
         if(set == 1) begin
@@ -336,13 +326,13 @@ output wire LCD_DB7
     wire[3:0] cnter;
     wire[19:0] current_time;
 
-    sclk #(1) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
+    sclk #(20000000) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
 
     //bcd_counter #(9) bcd9(.trigger(secclk), .rst(~rst), .set(set_bcd), .counter(cnter));
 
     time_view tview(.clk(clk), .rst(~rst), .mode12h(mode12h), .set_time(set_bcd), .set_alarm(set_bcd), .hh_mm_ss(current_time));
 
-    lcd_disp_interface #( 10, 30, 10 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
+    lcd_disp_interface #( 20000, 30, 10 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
 
     always @ (posedge clk) begin
         if(~rst) begin
@@ -442,7 +432,7 @@ output wire LCD_DB7
     end
 
     assign IsRst2 = 1;
-    assign IsRst = cnter[0];
+    assign IsRst = current_time[0];
 
 endmodule
 

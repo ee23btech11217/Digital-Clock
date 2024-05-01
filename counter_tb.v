@@ -60,6 +60,11 @@ module counter_tb();
 
         #100;
 
+        ;
+
+
+        #100;
+
         $finish;
     end
 

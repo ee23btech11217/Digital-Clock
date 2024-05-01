@@ -4,8 +4,8 @@ set_io IsRst 34
 set_io LCD_RS 40
 set_io LCD_E 54
 set_io LCD_RW 37
-set_io LCD_DB0 53 // IO_15
-set_io LCD_DB1 42 // IO_17
+set_io LCD_DB0 60 // IO_9
+set_io LCD_DB1 63 // IO_7
 set_io LCD_DB2 36 // IO_19
 set_io LCD_DB3 39 // IO_21
 set_io LCD_DB4 33 // IO_23

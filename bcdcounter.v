@@ -61,7 +61,8 @@ module hour_counter
     output wire[3:0] h0,
     output wire[1:0] h1,
     output wire am_pm,
-    output reg overflow
+    output reg overflow,
+    output wire[4:0] hr_bin
 );
 
     wire[4:0] set_hr;
@@ -94,6 +95,8 @@ module hour_counter
         end
     end
 
+    assign hr_bin = hr_counter;
+
 endmodule
 
 module sclk #(parameter F_MINUS1 = 10) (input clk, input rst, output reg sec_clk);
@@ -118,8 +121,8 @@ module sclk #(parameter F_MINUS1 = 10) (input clk, input rst, output reg sec_clk
 endmodule
 
 // h1 h2 : m1 m2 : s1 s2
-// 1 + 4 + 3 + 4 + 3 + 4
-// 19
+// 2 + 4 + 3 + 4 + 3 + 4
+// 20
 
 module time_view
 (
@@ -130,20 +133,31 @@ module time_view
     input set_alarm,
     input button1,
     input button2,
-    input wire[1:0] alarm_id,
     input wire[19:0] stime_alarm,
     input wire sam_pm,
     output wire[19:0] hh_mm_ss,
-    output wire am_pm
+    output wire am_pm,
+    output wire buzz
 );
 
     wire sec_clk;
     wire bcd_clk[6];
     wire wireX[2];
     wire[19:0] stime;
+    wire snd_clk;
+    wire[4:0] hr_bin;
+
+    reg[19:0] alarm_time;
+    reg alarm_mask;
 
     // clk frequency is 2 Hz
+    // change frequency before flashing to 20 000 000
     sclk #(1) second_clk(.clk(clk), .rst(rst), .sec_clk(sec_clk));
+
+    // change frequency before flashing
+    // to something like 2kHz
+    reg[63:0] play_alarm_sound;
+    sclk #(1) sound_clk(.clk(clk), .rst(rst), .sec_clk(snd_clk));
 
     bcd_counter #(9) s0(.trigger(sec_clk),    .rst(rst), .set(set_time), .set_value(stime[3:0]), .counter(hh_mm_ss[3:0]), .overflow(bcd_clk[0]));
     bcd_counter #(5) s1(.trigger(bcd_clk[0]), .rst(rst), .set(set_time), .set_value({1'b0, stime[6:4]}), .counter({wireX[0], hh_mm_ss[6:4]}), .overflow(bcd_clk[1]));
@@ -153,16 +167,42 @@ module time_view
 
     hour_counter hrc(.trigger(bcd_clk[3]), .rst(rst), .set(set_time), .mode_12h(mode12h),
                            .set_h0(stime[17:14]), .set_h1({1'b0, 1'b0, stime[19:18]}), .set_am_pm(sam_pm),
-                           .h0(hh_mm_ss[17:14]), .h1(hh_mm_ss[19:18]), .am_pm(am_pm), .overflow(bcd_clk[4]));
+                           .h0(hh_mm_ss[17:14]), .h1(hh_mm_ss[19:18]), .am_pm(am_pm), .overflow(bcd_clk[4]), .hr_bin(hr_bin));
     
     setFSM setlogic(.clk(clk), .reset(rst), .setbutton(sam_pm), .button1(button1), .button2(button2), .hour1(stime[19:18]), .hour2(stime[17:14]), .min1(stime[13:11]), .min2(stime[10:7]), .sec1(stime[6:4]), .sec2(stime[3:0]));
 
-//    always @ (posedge clk) begin
-//        if(rst) begin
-//            // reset all state
-//            ;
-//        end
-//    end
+    always @ (posedge clk) begin
+        if(rst) begin
+            // reset all state
+            alarm_time <= 0;
+            alarm_mask <= 0;
+            play_alarm_sound <= 0;
+        end
+
+        if(set_alarm) begin
+            alarm_mask <= 1;
+            alarm_time[13:0] <= stime_alarm[13:0];
+            alarm_time[18:14] <= (stime_alarm[17:14] + 10 * stime_alarm[19:18]) + (12 * am_pm * mode12h);
+        end
+
+        // if a alarm is active
+        if(alarm_mask) begin
+            if(alarm_time[13:0] == hh_mm_ss[13:0] && alarm_time[18:14] == hr_bin[4:0]) begin
+                // ring the alarm alarm
+                play_alarm_sound = 1;
+                alarm_mask <= 0; 
+            end
+        end
+
+        // value measured in clock cycles
+        // change value when flashing
+        if(play_alarm_sound > 10) begin
+            play_alarm_sound <= 0;
+        end
+        else if(play_alarm_sound > 0) play_alarm_sound <= play_alarm_sound + 1;
+    end
+
+    assign buzz = (play_alarm_sound > 0) & snd_clk;
 
 endmodule
 

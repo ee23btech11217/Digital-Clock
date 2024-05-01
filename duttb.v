@@ -15,7 +15,6 @@ module time_view_tb();
         .set_alarm(set_alarm),
         .button1(button1),
         .button2(button2),
-        .alarm_id(alarm_id),
         .stime_alarm(stime_alarm),
         .sam_pm(sam_pm),
         .hh_mm_ss(hh_mm_ss),
@@ -93,9 +92,21 @@ module time_view_tb();
         mode12h = 1'b1;
         
         // Add more test cases as needed
+        #500;
+        // Test case 7: Set the alarm
+        stime_alarm = { 2'd0, 4'd1, 3'd3, 4'd2, 3'd4, 4'd6 };
+        #10;
+        set_alarm = 1;
+        #10;
+        set_alarm = 0;
+        #10;
+
+        // Add more test cases as needed
+        #500;
+        sam_pm = 1'b0;
 
         // Finish simulation
-        #1000;
+        #2000;
         $finish;
     end
 

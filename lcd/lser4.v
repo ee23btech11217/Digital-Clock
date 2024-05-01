@@ -128,10 +128,11 @@ module bcd_counter#(
     output reg[3:0] counter,
     output reg overflow
 );
-    always @ (rst) begin
-        counter <= 0;
-        overflow <= 0;
-    end
+
+//    always @ (rst) begin : BCD_CRST
+//        counter <= 0;
+//        overflow <= 0;
+//    end
 
     always @ (posedge trigger) begin : BCD_COUNT
         if(set) begin
@@ -150,152 +151,6 @@ module bcd_counter#(
 
 endmodule
 
-// converts a binary number from 0...23 into bcd values
-// fast as fuck
-module bin_to_bcd(input wire[4:0] binary, output wire[1:0] d1, output wire[3:0] d0);
-    wire[8:0] bin9;
-    wire[8:0] q;
-    assign bin9[8:0] = {4'b0, binary[4:0]};
-    assign q[8:0] = (bin9 + (bin9 << 2) + (bin9 << 3));
-    assign d1[1:0] = q[8:7];
-    assign d0[3:0] = binary + {q[7], q[8], q[7] | q[8], q[7], 1'b0};
-endmodule
-
-module bcd_to_bin(input wire[3:0] d1, input wire[3:0] d0, output wire[4:0] binary);
-    assign binary = d0 + (d1 << 1) + (d1 << 3);
-endmodule
-
-module hour_counter
-(
-    input trigger,
-    input rst,
-    input set,
-    input mode_12h,
-    input wire[3:0] set_h0,
-    input wire[3:0] set_h1,
-    input wire set_am_pm,
-    output wire[3:0] h0,
-    output wire[1:0] h1,
-    output wire am_pm,
-    output reg overflow,
-    output wire[4:0] hr_bin
-);
-
-    wire[4:0] set_hr;
-    reg[4:0] hr_counter = 0;
-
-    wire[4:0] hr_mode;
-    assign am_pm = hr_counter > 11;
-    assign hr_mode = hr_counter + {mode_12h & am_pm, 1'b0, mode_12h & am_pm, 2'b0};
-
-    bin_to_bcd binToBCD(.binary(hr_mode), .d1(h1), .d0(h0));
-    bcd_to_bin bcdToBinSET(.d1(set_h1), .d0(set_h0), .binary(set_hr));
-
-    always @ (rst) begin
-        hr_counter <= 0;
-        overflow <= 0;
-    end
-
-    always @ (posedge trigger) begin : BCD_COUNT
-        if(set == 1) begin
-        hr_counter <= set_hr + {1'b0, mode_12h & set_am_pm, mode_12h & set_am_pm, 2'b0}; // set_am_pm
-        overflow <= 0;
-        end
-        else if(hr_counter < 23) begin
-            hr_counter = hr_counter + 1;
-            overflow <= 0;
-        end
-        else begin
-            hr_counter <= 0;
-            overflow <= 1;
-        end
-    end
-
-    assign hr_bin = hr_counter;
-
-endmodule
-
-module time_view
-(
-    input clk, 
-    input rst,
-    input mode12h,
-    input set_time,
-    input set_alarm,
-    input button1,
-    input button2,
-    input wire[19:0] stime_alarm,
-    input wire sam_pm,
-    output wire[19:0] hh_mm_ss,
-    output wire am_pm,
-    output wire buzz
-);
-
-    wire sec_clk;
-    wire bcd_clk[6];
-    wire wireX[2];
-    wire[19:0] stime;
-    wire snd_clk;
-    wire[4:0] hr_bin;
-
-    reg[19:0] alarm_time;
-    reg alarm_mask;
-
-    // clk frequency is 2 Hz
-    // change frequency before flashing to 20 000 000
-    sclk #(1) second_clk(.clk(clk), .rst(rst), .sec_clk(sec_clk));
-
-    // change frequency before flashing
-    // to something like 2kHz
-    reg[63:0] play_alarm_sound;
-    sclk #(1) sound_clk(.clk(clk), .rst(rst), .sec_clk(snd_clk));
-
-    bcd_counter #(9) s0(.trigger(sec_clk),    .rst(rst), .set(set_time), .set_value(stime[3:0]), .counter(hh_mm_ss[3:0]), .overflow(bcd_clk[0]));
-    bcd_counter #(5) s1(.trigger(bcd_clk[0]), .rst(rst), .set(set_time), .set_value({1'b0, stime[6:4]}), .counter({wireX[0], hh_mm_ss[6:4]}), .overflow(bcd_clk[1]));
-
-    bcd_counter #(9) m0(.trigger(bcd_clk[1]), .rst(rst), .set(set_time), .set_value(stime[10: 7]), .counter(hh_mm_ss[10: 7]), .overflow(bcd_clk[2]));
-    bcd_counter #(5) m1(.trigger(bcd_clk[2]), .rst(rst), .set(set_time), .set_value({1'b0, stime[13:11]}), .counter({wireX[1], hh_mm_ss[13:11]}), .overflow(bcd_clk[3]));
-
-    hour_counter hrc(.trigger(bcd_clk[3]), .rst(rst), .set(set_time), .mode_12h(mode12h),
-                           .set_h0(stime[17:14]), .set_h1({1'b0, 1'b0, stime[19:18]}), .set_am_pm(sam_pm),
-                           .h0(hh_mm_ss[17:14]), .h1(hh_mm_ss[19:18]), .am_pm(am_pm), .overflow(bcd_clk[4]), .hr_bin(hr_bin));
-    
-    //setFSM setlogic(.clk(clk), .reset(rst), .setbutton(sam_pm), .button1(button1), .button2(button2), .hour1(stime[19:18]), .hour2(stime[17:14]), .min1(stime[13:11]), .min2(stime[10:7]), .sec1(stime[6:4]), .sec2(stime[3:0]));
-
-    always @ (posedge clk) begin
-        if(rst) begin
-            // reset all state
-            alarm_time <= 0;
-            alarm_mask <= 0;
-            play_alarm_sound <= 0;
-        end
-
-        if(set_alarm) begin
-            alarm_mask <= 1;
-            alarm_time[13:0] <= stime_alarm[13:0];
-            alarm_time[18:14] <= (stime_alarm[17:14] + 10 * stime_alarm[19:18]) + (12 * am_pm * mode12h);
-        end
-
-        // if a alarm is active
-        if(alarm_mask) begin
-            if(alarm_time[13:0] == hh_mm_ss[13:0] && alarm_time[18:14] == hr_bin[4:0]) begin
-                // ring the alarm alarm
-                play_alarm_sound = 1;
-                alarm_mask <= 0; 
-            end
-        end
-
-        // value measured in clock cycles
-        // change value when flashing
-        if(play_alarm_sound > 10) begin
-            play_alarm_sound <= 0;
-        end
-        else if(play_alarm_sound > 0) play_alarm_sound <= play_alarm_sound + 1;
-    end
-
-    assign buzz = (play_alarm_sound > 0) & snd_clk;
-
-endmodule
 
 module lcd_top(input wire rst, output wire IsRst, output wire IsRst2,
 output wire LCD_RS,
@@ -331,18 +186,14 @@ output wire LCD_DB7
 
     reg updateDisplay;
     reg set_bcd;
-    reg mode12h;
 
     wire[3:0] cnter;
-    wire[19:0] current_time;
 
-    sclk #(1) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
+    sclk #(20000000) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
 
-    //bcd_counter #(9) bcd9(.trigger(secclk), .rst(~rst), .set(set_bcd), .counter(cnter));
+    bcd_counter #(9) bcd9(.trigger(secclk), .rst(~rst), .set(set_bcd), .counter(cnter));
 
-    time_view tview(.clk(clk), .rst(~rst), .mode12h(mode12h), .set_time(set_bcd), .set_alarm(set_bcd), .hh_mm_ss(current_time));
-
-    lcd_disp_interface #( 10, 30, 10 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
+    lcd_disp_interface #( 20000, 30, 10 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
 
     always @ (posedge clk) begin
         if(~rst) begin
@@ -353,7 +204,6 @@ output wire LCD_DB7
             testValue <= 0;
             updateDisplay <= 0; 
             set_bcd <= 0;
-            mode12h <= 0;
         end
 
         if(secclk && !updateDisplay) begin
@@ -363,38 +213,10 @@ output wire LCD_DB7
         end
 
         if(data_index == 0) begin
-            testValue <= {4'b0011, 2'b0, current_time[19:18]};
+            testValue <= {4'b0011, cnter[3:0]};
             insDataMode <= 1;
         end
         else if(data_index == 1) begin
-            testValue <= {4'b0011, current_time[17:14]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 2) begin
-            testValue <= {4'b0011, 4'b1010};
-            insDataMode <= 1;
-        end
-        else if(data_index == 3) begin
-            testValue <= {4'b0011, 1'b0, current_time[13:11]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 4) begin
-            testValue <= {4'b0011, current_time[10:7]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 5) begin
-            testValue <= {4'b0011, 4'b1010};
-            insDataMode <= 1;
-        end
-        else if(data_index == 6) begin
-            testValue <= {4'b0011, 1'b0, current_time[6:4]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 7) begin
-            testValue <= {4'b0011, current_time[3:0]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 8) begin
             testValue <= 8'b00000011;
             insDataMode <= 0;
         end
@@ -402,6 +224,18 @@ output wire LCD_DB7
             testValue <= 8'h20;
             insDataMode <= 1;
         end
+
+//        case (data_index) 
+//
+//            0: testValue <= 8'b01001000;
+//            1: testValue <= 8'b01000101;
+//            2: testValue <= 8'b01001100;
+//            3: testValue <= 8'b01001100;
+//            4: begin
+//                testValue <= 8'b01001111;
+//            end
+//
+//        endcase
 
         if(ready && updateDisplay && !(sendPulse || send)) begin
             data_index <= data_index + 1;
@@ -432,7 +266,7 @@ output wire LCD_DB7
             end
             endcase
 
-            if(data_index == 9) begin
+            if(data_index == 2) begin
                 data_index <= 0;
                 updateDisplay <= 0;
             end
