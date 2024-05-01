@@ -40,7 +40,7 @@ module lcd_disp_interface #(parameter FKMINUS1 = 1, parameter waitTimeIns = 30, 
         end
         else if(counter > 3*waitTimeIns*FKMINUS1 && counter < 4*waitTimeIns*FKMINUS1 && init) begin
             E <= 1;
-            DB <= 8'b00001111;
+            DB <= 8'b00001100;
             ready <= 0;
         end
         else if(counter > 4*waitTimeIns*FKMINUS1 && counter < 5*waitTimeIns*FKMINUS1 && init) begin
@@ -218,39 +218,49 @@ module time_view
     input wire sam_pm,
     output wire[19:0] hh_mm_ss,
     output wire am_pm,
-    output wire buzz
+    output wire buzz,
+    output wire dled
 );
 
     wire sec_clk;
     wire bcd_clk[6];
     wire wireX[2];
-    wire[19:0] stime;
+    reg[3:0] stime[6];
     wire snd_clk;
     wire[4:0] hr_bin;
 
     reg[19:0] alarm_time;
     reg alarm_mask;
 
+    reg setTimeL;
+
     // clk frequency is 2 Hz
     // change frequency before flashing to 20 000 000
-    sclk #(1) second_clk(.clk(clk), .rst(rst), .sec_clk(sec_clk));
+    sclk #(12000000) second_clk(.clk(clk), .rst(rst), .sec_clk(sec_clk));
 
     // change frequency before flashing
     // to something like 2kHz
     reg[63:0] play_alarm_sound;
     sclk #(1) sound_clk(.clk(clk), .rst(rst), .sec_clk(snd_clk));
 
-    bcd_counter #(9) s0(.trigger(sec_clk),    .rst(rst), .set(set_time), .set_value(stime[3:0]), .counter(hh_mm_ss[3:0]), .overflow(bcd_clk[0]));
-    bcd_counter #(5) s1(.trigger(bcd_clk[0]), .rst(rst), .set(set_time), .set_value({1'b0, stime[6:4]}), .counter({wireX[0], hh_mm_ss[6:4]}), .overflow(bcd_clk[1]));
+    bcd_counter #(9) s0(.trigger(sec_clk),    .rst(rst), .set(setTimeL), .set_value(stime[0]), .counter(hh_mm_ss[3:0]), .overflow(bcd_clk[0]));
+    bcd_counter #(5) s1(.trigger(bcd_clk[0]), .rst(rst), .set(setTimeL), .set_value(stime[1]), .counter({wireX[0], hh_mm_ss[6:4]}), .overflow(bcd_clk[1]));
 
-    bcd_counter #(9) m0(.trigger(bcd_clk[1]), .rst(rst), .set(set_time), .set_value(stime[10: 7]), .counter(hh_mm_ss[10: 7]), .overflow(bcd_clk[2]));
-    bcd_counter #(5) m1(.trigger(bcd_clk[2]), .rst(rst), .set(set_time), .set_value({1'b0, stime[13:11]}), .counter({wireX[1], hh_mm_ss[13:11]}), .overflow(bcd_clk[3]));
+    bcd_counter #(9) m0(.trigger(bcd_clk[1]), .rst(rst), .set(setTimeL), .set_value(stime[2]), .counter(hh_mm_ss[10: 7]), .overflow(bcd_clk[2]));
+    bcd_counter #(5) m1(.trigger(bcd_clk[2]), .rst(rst), .set(setTimeL), .set_value(stime[3]), .counter({wireX[1], hh_mm_ss[13:11]}), .overflow(bcd_clk[3]));
 
-    hour_counter hrc(.trigger(bcd_clk[3]), .rst(rst), .set(set_time), .mode_12h(mode12h),
-                           .set_h0(stime[17:14]), .set_h1({1'b0, 1'b0, stime[19:18]}), .set_am_pm(sam_pm),
+    hour_counter hrc(.trigger(bcd_clk[3]), .rst(rst), .set(setTimeL), .mode_12h(mode12h),
+                           .set_h0(stime[4]), .set_h1(stime[5]), .set_am_pm(sam_pm),
                            .h0(hh_mm_ss[17:14]), .h1(hh_mm_ss[19:18]), .am_pm(am_pm), .overflow(bcd_clk[4]), .hr_bin(hr_bin));
     
     //setFSM setlogic(.clk(clk), .reset(rst), .setbutton(sam_pm), .button1(button1), .button2(button2), .hour1(stime[19:18]), .hour2(stime[17:14]), .min1(stime[13:11]), .min2(stime[10:7]), .sec1(stime[6:4]), .sec2(stime[3:0]));
+
+    reg mode;
+
+    reg lockButton1;
+    reg lockButton2;
+
+    assign dled = button2;
 
     always @ (posedge clk) begin
         if(rst) begin
@@ -258,12 +268,29 @@ module time_view
             alarm_time <= 0;
             alarm_mask <= 0;
             play_alarm_sound <= 0;
+            mode <= 0;
+            setTimeL <= 0;
         end
 
         if(set_alarm) begin
             alarm_mask <= 1;
             alarm_time[13:0] <= stime_alarm[13:0];
             alarm_time[18:14] <= (stime_alarm[17:14] + 10 * stime_alarm[19:18]) + (12 * am_pm * mode12h);
+        end
+
+        lockButton1 <= button1;
+        lockButton2 <= button2;
+
+        if(set_time && !setTimeL) begin
+            setTimeL <= ~setTimeL;
+        end
+
+        // button switched on(posedge)
+        if(button1 && !lockButton1 && setTimeL) begin
+            stime[2*mode] <= stime[2*mode] + 1;
+        end
+        if(button2 && !lockButton2 && setTimeL) begin
+            stime[(2*mode) + 1] <= stime[(2*mode) + 1] + 1;
         end
 
         // if a alarm is active
@@ -288,6 +315,10 @@ module time_view
 endmodule
 
 module lcd_top(input wire rst, output wire IsRst, output wire IsRst2,
+input wire button1,
+input wire button2,
+input wire set_time,
+input wire sam_pm,
 output wire LCD_RS,
 output wire LCD_E,
 output wire LCD_RW,
@@ -326,13 +357,13 @@ output wire LCD_DB7
     wire[3:0] cnter;
     wire[19:0] current_time;
 
-    sclk #(20000000) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
+    sclk #(12000000) second_clk(.clk(clk), .rst(~rst), .sec_clk(secclk));
 
     //bcd_counter #(9) bcd9(.trigger(secclk), .rst(~rst), .set(set_bcd), .counter(cnter));
 
-    time_view tview(.clk(clk), .rst(~rst), .mode12h(mode12h), .set_time(set_bcd), .set_alarm(set_bcd), .hh_mm_ss(current_time));
+    time_view tview(.clk(clk), .rst(~rst), .mode12h(mode12h), .set_alarm(set_bcd), .hh_mm_ss(current_time), .button1(~button1), .button2(~button2), .set_time(~set_time), .sam_pm(~sam_pm), .dled(IsRst));
 
-    lcd_disp_interface #( 20000, 30, 10 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
+    lcd_disp_interface #( 12000, 10, 5 ) ldi(.clk(clk), .rst(~rst), .data(testValue), .ins_data(insDataMode), .send_data(send), .RS(LCD_RS), .E(LCD_E), .RW(LCD_RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}), .ready(ready));
 
     always @ (posedge clk) begin
         if(~rst) begin
@@ -352,39 +383,43 @@ output wire LCD_DB7
             testValue <= {4'b0011, cnter[3:0]};
         end
 
-        if(data_index == 0) begin
+        if(data_index < 4) begin
+            testValue <= 8'h20;
+            insDataMode <= 1;
+        end
+        if(data_index == 4) begin
             testValue <= {4'b0011, 2'b0, current_time[19:18]};
             insDataMode <= 1;
         end
-        else if(data_index == 1) begin
+        else if(data_index == 5) begin
             testValue <= {4'b0011, current_time[17:14]};
             insDataMode <= 1;
         end
-        else if(data_index == 2) begin
-            testValue <= {4'b0011, 4'b1010};
-            insDataMode <= 1;
-        end
-        else if(data_index == 3) begin
-            testValue <= {4'b0011, 1'b0, current_time[13:11]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 4) begin
-            testValue <= {4'b0011, current_time[10:7]};
-            insDataMode <= 1;
-        end
-        else if(data_index == 5) begin
-            testValue <= {4'b0011, 4'b1010};
-            insDataMode <= 1;
-        end
         else if(data_index == 6) begin
-            testValue <= {4'b0011, 1'b0, current_time[6:4]};
+            testValue <= {4'b0011, 4'b1010};
             insDataMode <= 1;
         end
         else if(data_index == 7) begin
-            testValue <= {4'b0011, current_time[3:0]};
+            testValue <= {4'b0011, 1'b0, current_time[13:11]};
             insDataMode <= 1;
         end
         else if(data_index == 8) begin
+            testValue <= {4'b0011, current_time[10:7]};
+            insDataMode <= 1;
+        end
+        else if(data_index == 9) begin
+            testValue <= {4'b0011, 4'b1010};
+            insDataMode <= 1;
+        end
+        else if(data_index == 10) begin
+            testValue <= {4'b0011, 1'b0, current_time[6:4]};
+            insDataMode <= 1;
+        end
+        else if(data_index == 11) begin
+            testValue <= {4'b0011, current_time[3:0]};
+            insDataMode <= 1;
+        end
+        else if(data_index == 12) begin
             testValue <= 8'b00000011;
             insDataMode <= 0;
         end
@@ -422,7 +457,7 @@ output wire LCD_DB7
             end
             endcase
 
-            if(data_index == 9) begin
+            if(data_index == 13) begin
                 data_index <= 0;
                 updateDisplay <= 0;
             end
@@ -432,7 +467,7 @@ output wire LCD_DB7
     end
 
     assign IsRst2 = 1;
-    assign IsRst = current_time[0];
+    //assign IsRst = button2;
 
 endmodule
 
