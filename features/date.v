@@ -1,5 +1,5 @@
 
-module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1:0] date_mode, output [23:0] date_out);
+module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [2:0] weekday_in, input [1:0] date_mode, output [23:0] date_out, output [2:0] weekday_out);
 
   //Time signal format: hhhh_hhhh
   //Date signal format: dddd_dddd.mmmm_mmmm.0010_0000_yyyy_yyyy   (1-1-2000 --> 12-12-2099) *CAUTION ABOUT THE 20** FORMAT OF YEAR*
@@ -16,7 +16,7 @@ module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1
   reg [7:0] day_reg, day_reg_del; //day_reg_del: delayed signal
   reg [7:0] month_reg, month_reg_del; //month_reg_del: delayed signal
   reg [7:0] year_reg;
-
+  reg [2:0] weekdayreg;
   reg [7:0] hour_reg; //Store previous hour data
   reg new_day; //Detect new day
   wire new_year, new_month; //Detect new year/month
@@ -24,32 +24,28 @@ module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1
   //separation and combination of date signals
   assign {day_in, month_in, year_in} = date_in;
   assign date_out = {day_reg, month_reg, year_reg};
+  assign weekday_out = weekdayreg;
 
   //edge detaction for year & month changes
   assign new_year = (month_reg == 8'h01) & (month_reg_del != 8'h01);
   assign new_month = (day_reg == 8'h01) & (day_reg_del != 8'h01);
 
   always@(posedge clk) //edge detection
-    begin
+  begin
       new_day <= (hour_in == 8'h0) & (hour_reg == 8'h23);
-    end
-
-  always@(posedge clk) //generate delayed signals for edge detection
-    begin
       hour_reg <= hour_in;
       day_reg_del <= day_reg;
       month_reg_del <= month_reg;
-    end
 
-  //handle year
-  always@(posedge clk or posedge date_mode)
-    begin
-      if(date_mode == 2'b10)  //clk_mode == 2 for set date
-        begin
+      if(date_mode == 2'b11)  //clk_mode == 3 for set date
+      begin
           year_reg <= year_in;
-        end
-      else
-        begin
+          month_reg <= month_in;
+          day_reg <= day_in;
+          weekdayreg <= weekday_in;
+      end
+      else begin
+          //handle years
           if(new_year)
             begin
               casex(year_reg)
@@ -57,18 +53,8 @@ module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1
                 default: year_reg <= year_reg + 8'b01; //(2008 --> 2009)
               endcase 
             end
-        end
-    end     
 
-  //handle month
-  always@(posedge clk or posedge date_mode)
-    begin
-      if (date_mode == 2'b10) 
-        begin
-          month_reg <= month_in;
-        end
-      else
-        begin
+          //handle months
           if(new_month)
             begin
               case(month_reg)
@@ -77,18 +63,8 @@ module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1
                 default: month_reg <= month_reg + 4'h1;
               endcase 
             end
-        end
-    end     
-    
-  //handle day
-  always@(posedge clk or posedge date_mode) 
-    begin
-      if(date_mode == 2'b10)  //clk_mode == 2 for set date
-        begin
-          day_reg <= day_in;
-        end
-      else
-        begin
+
+          //handle days
           if(new_day)
             begin
               casex(month_reg)
@@ -124,7 +100,10 @@ module datemodule(input clk, input [7:0] hour_in, input [23:0] date_in, input [1
                     default: day_reg <= day_reg + 8'd1;
                   endcase
               endcase
+
+              //handle weekday
+              weekdayreg <= (weekdayreg == 3'b110) ? 3'b000 : weekday_out + 3'b001; //(Sun --> Mon)
             end
         end
-    end
+  end     
 endmodule

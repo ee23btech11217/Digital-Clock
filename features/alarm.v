@@ -15,25 +15,12 @@ module alarm(input clk, input rst, input [1:0] alarm_mode, input [15:0] in_time,
       if(rst)
         begin
           time_alarm <= 16'd0; 
+          ring <= 1'b0;
         end
       else
         begin
           time_alarm <= (alarm_mode == 2'b11) ? in_time : time_alarm;
+          ring <= ((in_time >= time_alarm) && (in_time < time_alarm + 16'h0001)) ? 1 : 0; 
         end
     end
-    
-  //handle the ringing of the alarm
-  always@(posedge clk or posedge rst)
-    begin
-      if(rst)
-        begin
-           ring <= 1'b0;
-        end
-      else
-        begin
-              //16'h0001 --> number of minutes ring is high (1 min)
-              ring <= ((in_time >= time_alarm) && (in_time < time_alarm + 16'h0001)) ? 1 : 0; 
-        end
-    end
-
 endmodule//alarm
