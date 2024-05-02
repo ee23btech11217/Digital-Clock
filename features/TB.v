@@ -1,29 +1,24 @@
-module zellers_congruence_tb;
+module clock_divider_tb;
 
-    reg [7:0] year;
-    reg [7:0] month;
-    reg [7:0] day;
-    wire [2:0] day_of_week;
+    reg clk_in; // 20MHz clock input
+    wire clk_out; // 1Hz output clock
     
-    zellers_congruence dut (
-        .year(year),
-        .month(month),
-        .day(day),
-        .day_of_week(day_of_week)
+    // Instantiate the clock divider module
+    clock_divider dut (
+        .clk_in(clk_in),
+        .clk_out(clk_out)
     );
-
-initial begin
-    $monitor("Time: %0t, %h - %h - %h, %h", $time, day, month, year, day_of_week);
-    year = 8'h24;
-    month = 8'h05;
-    day = 8'h1;
-    #100;
-    repeat(30)    
-    begin
-        day = day + 1;
-        #100;
+    
+    // Generate a clock for simulation
+    always #1 clk_in = ~clk_in; // 20MHz clock period is 50ns
+    
+    // Monitor the clock output
+    initial begin
+        $monitor("Time = %0t, clk_out = %b", $time, clk_out);
+        // Simulate for 50 microseconds
+        clk_in = 0;
+        #60000000;
+        $finish;
     end
-
-end
 
 endmodule
