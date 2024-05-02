@@ -1,7 +1,7 @@
 module button_sampler #(parameter SFREQ_KHZ = 1) (
     input wire mclk, input wire rst,
-    input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1,
-    output reg[3:0] sbutton
+    input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1, input wire pButton2, input wire pButton3,
+    output reg[5:0] sbutton
 );
 
     reg[31:0] counter;
@@ -13,7 +13,7 @@ module button_sampler #(parameter SFREQ_KHZ = 1) (
         end
         else if(counter >= SFREQ_KHZ) begin
             counter <= 0;
-            sbutton <= { pButton0, pButton1, pSetButton, pAlarmButton };
+            sbutton <= { pButton0, pButton1, pButton2, pButton3, pSetButton, pAlarmButton };
         end
         else counter <= counter + 1;
     end
@@ -38,21 +38,25 @@ endmodule
 //
 module button_controller #(parameter MFREQ_KHZ = 1) (
     input wire mclk, input wire rst,
-    input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1,
-    output reg[1:0] clk_mode, output reg[1:0] vButton,
+    input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1, input wire pButton2, input wire pButton3,
+    output reg[1:0] clk_mode, output reg[3:0] vButton,
 );
     wire sButton0;
     wire sButton1;
+    wire sButton2;
+    wire sButton3;
     wire sSetButton;
     wire sAlarmButton;
 
     reg lsButton0;
     reg lsButton1;
+    reg lsButton2;
+    reg lsButton3;
     reg lsSetButton;
     reg lsAlarmButton;
 
     // Samples buttons every 5ms to prevent bouncing of inputs
-    button_sampler #(MFREQ_KHZ*5) bsampler( .mclk(mclk), .rst(rst), .pSetButton(pSetButton), .pAlarmButton(pAlarmButton), .pButton0(pButton0), .pButton1(pButton1), .sbutton({ sButton0, sButton1, sSetButton, sAlarmButton }) );
+    button_sampler #(MFREQ_KHZ*5) bsampler( .mclk(mclk), .rst(rst), .pSetButton(pSetButton), .pAlarmButton(pAlarmButton), .pButton0(pButton0), .pButton1(pButton1), .pButton2(pButton2), .pButton3(pButton3), .sbutton({ sButton0, sButton1, sButton2, sButton3, sSetButton, sAlarmButton }) );
 
     always @ (posedge mclk) begin
 
@@ -77,6 +81,28 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
             vButton[1] <= 0;
         end
         else vButton[1] <= 0;
+
+        // set vButton[2] on posedge of sButton0
+        if(sButton2 && !lsButton2) begin
+            lsButton2 <= 1;
+            vButton[2] <= 1;
+        end
+        else if(!sButton2 && lsButton2) begin
+            lsButton2 <= 0;
+            vButton[2] <= 0;
+        end
+        else vButton[2] <= 0;
+
+        // set vButton[3] on posedge of sButton0
+        if(sButton3 && !lsButton3) begin
+            lsButton3 <= 1;
+            vButton[3] <= 1;
+        end
+        else if(!sButton3 && lsButton3) begin
+            lsButton3 <= 0;
+            vButton[3] <= 0;
+        end
+        else vButton[3] <= 0;
 
         // change the mode on posedge of sSetButton
         if(sSetButton && !lsSetButton) begin
