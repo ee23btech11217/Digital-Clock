@@ -228,6 +228,7 @@ module time_view
     reg[3:0] stime[6];
     wire snd_clk;
     wire[4:0] hr_bin;
+    reg[6:0] counter;
 
     reg[19:0] alarm_time;
     reg alarm_mask;
@@ -270,27 +271,14 @@ module time_view
             play_alarm_sound <= 0;
             mode <= 0;
             setTimeL <= 0;
+            counter <= 0;
         end
+        else counter <= counter + 1;
 
         if(set_alarm) begin
             alarm_mask <= 1;
             alarm_time[13:0] <= stime_alarm[13:0];
             alarm_time[18:14] <= (stime_alarm[17:14] + 10 * stime_alarm[19:18]) + (12 * am_pm * mode12h);
-        end
-
-        lockButton1 <= button1;
-        lockButton2 <= button2;
-
-        if(set_time && !setTimeL) begin
-            setTimeL <= ~setTimeL;
-        end
-
-        // button switched on(posedge)
-        if(button1 && !lockButton1 && setTimeL) begin
-            stime[2*mode] <= stime[2*mode] + 1;
-        end
-        if(button2 && !lockButton2 && setTimeL) begin
-            stime[(2*mode) + 1] <= stime[(2*mode) + 1] + 1;
         end
 
         // if a alarm is active
@@ -308,6 +296,26 @@ module time_view
             play_alarm_sound <= 0;
         end
         else if(play_alarm_sound > 0) play_alarm_sound <= play_alarm_sound + 1;
+    end
+
+    always @ (posedge counter[6]) begin
+        lockButton1 <= button1;
+        lockButton2 <= button2;
+
+        if(set_time && !setTimeL) begin
+            setTimeL <= ~setTimeL;
+            mode <= 0;
+        end
+
+        // button switched on(posedge)
+        if(button1 && !lockButton1 && setTimeL) begin
+            stime[2*mode] <= stime[2*mode] + 1;
+            mode <= 0;
+        end
+        if(button2 && !lockButton2 && setTimeL) begin
+            stime[(2*mode) + 1] <= stime[(2*mode) + 1] + 1;
+            mode <= 0;
+        end
     end
 
     assign buzz = (play_alarm_sound > 0) & snd_clk;
