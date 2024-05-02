@@ -2,15 +2,15 @@
 
 // mclk: main clock, the clock from the module qlal4...( 20 MHz? )
 //
-// M_FREQ: main clock frequency, use this paramter to set main clock frequency
+// M_FREQ: main clock frequency, use this parameter to set main clock frequency
 //         = 1/10/100 for testing, = 20 000 000 for vaman board ( make sure all time keeping registers are 64 bit wide )
 //
 // clk_mode:
 //     == 0: if in default mode
 //     == 1: if in set time mode
-//     == 2: if in set date mode
-//     == 3: if in set alarm mode(any day alarm implementation?)
-// 
+//     == 2: if in set alarm mode (any day alarm implementation?)
+//     == 3: if in set date mode
+
 // vButton: virtual buttons, HIGH(for 1 MCLK) when the physical button(pButton) goes from LOW to HIGH
 //           sButton[0]: units digit, sButton[1]: tens digit, 
 // 
@@ -23,16 +23,48 @@
 //                  2       0       2       4      = 2024
 //
 // buzzer: HIGH for 5 seconds after alarm went off otherwise LOW
-// 
+
 module clock_top #(parameter M_FREQ = 1) (
     input wire mclk, input wire rst,
-    input wire[1:0] clk_mode, input wire[1:0] vButton,
-    output wire[3:0] bcd_time[6],
+    input wire[1:0] clk_mode, input wire [3:0] vButton,
+    output wire[23:0] bcd_time,
     output wire[2:0] weekday,
-    output wire[3:0] year[4],
+    output wire[23:0] date,
     output wire buzzer,
 );
 
+wire clk1;
+wire outtime;
+wire [23:0] connectTime;
+wire [23:0] alarm_time;
+wire [23:0] clock_time;
+wire [23:0] setDate;
+wire [2:0] setWeekday;
+
+assign bcd_time = (clk_mode == 2'b11) ? alarm_time : clock_time;
+
+//clock 1 Hz frequency
+
+
+//12-24 hour format
+
+
+//counter
+settime d1 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(clk_mode), .hour1(connectTime[23:20]), .hour2(connectTime[19:16]), .min1(connectTime[15:12]), .min2(connectTime[11:8]), .sec1(connectTime[7:4]), .sec2(connectTime[3:0]));
+clocktime d2 (.clk_1hz(clk1), .rst(rst), .clk_mode(clk_mode), .time_in(connectTime), .time_out(clock_time));  
+
+//alarm
+settime d4 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode({clk_mode[0], clk_mode[1]}), .hour1(alarm_time[23:20]), .hour2(alarm_time[19:16]), .min1(alarm_time[15:12]), .min2(alarm_time[11:8]), .sec1(alarm_time[7:4]), .sec2(alarm_time[3:0]));
+alarm d3 (.clk(mclk), .rst(rst), .alarm_mode(clk_mode), .in_time(bcd_time[23:8]), .ring(buzzer));
+
+//date
+setdate d1 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(clk_mode), .day1(setDate[23:20]), .day2(setDate[19:16]), .month1(setDate[15:12]), .month2(setDate[11:8]), .year1(setDate[7:4]), .year2(setDate[3:0]), .day(setWeekday));
+datemodule d5 (.clk(mclk), .hour_in(clock_time(23:16)), .date_in(setDate), .weekday_in(setWeekday), .date_mode(clk_mode), .date_out(date), .weekday_out(weekday));
+
+//timer
+
+//day 
+//zeller's congruence method for date to day conversion
     ;
 
 endmodule
