@@ -3,11 +3,12 @@ module timer(input wire clk_1hz, input wire[1:0] timer_mode, input wire[23:0] ti
   //separated time signals to respective meaning
   wire [7:0] sec_in, min_in, hour_in;
   reg [7:0] sec_reg, min_reg, hour_reg;
+  reg isbuzzer;
 
   //separation and combination of time signals
   assign {hour_in, min_in, sec_in} = time_in;
   assign time_out = {hour_reg, min_reg, sec_reg};
-  assign buzzer = (time_out == 24'h0) ? 1 : 0; //how many seconds?
+  assign buzzer = isbuzzer; //how many seconds?
 
     always@(posedge clk_1hz)
     begin 
@@ -17,8 +18,11 @@ module timer(input wire clk_1hz, input wire[1:0] timer_mode, input wire[23:0] ti
           sec_reg <= sec_in;
           min_reg <= min_in;
           hour_reg <= hour_in;
+          isbuzzer <= 0;
         end
-    else begin
+    else if (!isbuzzer)
+        begin
+          isbuzzer = (time_out == 24'h0) ? 1 : 0;
             //secs
           casex(sec_reg)
             8'h00:
