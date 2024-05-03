@@ -1,18 +1,43 @@
-// The LCD controller
 
-// Manage the LCD Display
+module interrupt_controller #(parameter MFREQ_KHZ = 1, parameter REPEAT = 0) (input wire mclk, input wire rst, input wire raiseInterrupt, input wire[15:0] delay_ms, output reg interrupt);
 
-// mclk: main clock, the clock from the module qlal4...( 20 MHz? )
-//
-// MFREQ_KHZ: main clock frequency in KHz, use this paramter to set main clock frequency(uses this to measure time in ms)
-//         = 1/10/100 for testing, = 20 000 for vaman board ( make sure all time keeping registers are 64 bit wide )
-//
-// LineA: the first line of output on LCD display(lineA[0] is to the left most side of the display)
-// LineB: the second line of output on LCD display
-//         for maps from BCD/alphabets to LCD display charecter see the datasheet of KS0066 chip(Samsung) Pg 18 (shared in this repo)
-// 
-// DB, RS, RW, E: output to the lcd display 
-//
+    reg[63:0] clk_counter = 0;
+    reg[16:0] ms_counter = 0;
+    reg upCount = 0;
+    reg rIntLatched = 0;
+
+    always @ (posedge mclk) begin
+        if(rst) begin
+            clk_counter <= 0;
+            ms_counter <= 0;
+            upCount <= 0;
+            interrupt <= 0;
+            rIntLatched <= 0;
+        end
+        else if(raiseInterrupt && !rIntLatched) begin
+            upCount <= 1;
+            rIntLatched <= 1;
+            ms_counter <= 0;
+            clk_counter <= 0;
+        end
+        else if(clk_counter >= MFREQ_KHZ) begin
+            clk_counter <= 0;
+            ms_counter <= ms_counter + upCount;
+
+            if(ms_counter >= delay_ms - 1) begin
+                interrupt <= 1;
+                ms_counter <= 0;
+                if(REPEAT == 0) upCount <= 0;
+            end
+        end
+        else clk_counter <= clk_counter + 1;
+
+        if(!raiseInterrupt && rIntLatched) rIntLatched <= 0;
+
+        if(interrupt && !rst) interrupt <= 0;
+    end
+
+endmodule
 
 module lcd_controller #(parameter MFREQ_KHZ = 1, InsWaitTime = 16'd10, DataWaitTime = 10, RefreshTime = 320)(
     input wire mclk, input wire rst,
@@ -183,5 +208,36 @@ module lcd_controller #(parameter MFREQ_KHZ = 1, InsWaitTime = 16'd10, DataWaitT
             end
         end
     end
+
+endmodule
+
+module test_lcd_ctrl(
+    input wire rst, output wire redled,
+    output wire RS, output wire E, output wire RW,
+    output wire LCD_DB0,
+    output wire LCD_DB1,
+    output wire LCD_DB2,
+    output wire LCD_DB3,
+    output wire LCD_DB4,
+    output wire LCD_DB5,
+    output wire LCD_DB6,
+    output wire LCD_DB7
+);
+
+    reg reset = 0;
+    wire clk;
+
+    //reg[15:0] counter = 0;
+
+    qlal4s3b_cell_macro qlal4s3b_cell(.Sys_Clk0(clk));
+
+    lcd_controller #(2000000, 4, 2, 2) lcd_ctrl(.mclk(clk), .rst(reset), .E(E), .RS(RS), .RW(RW), .DB({LCD_DB7, LCD_DB6, LCD_DB5, LCD_DB4, LCD_DB3, LCD_DB2, LCD_DB1, LCD_DB0}));
+
+    assign redled = E;
+
+    //always @ (posedge clk) begin
+    //    counter <= counter + (1 & ~rst);
+    //end
+
 endmodule
 

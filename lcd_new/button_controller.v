@@ -1,3 +1,4 @@
+
 module button_sampler #(parameter SFREQ_KHZ = 1) (
     input wire mclk, input wire rst,
     input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1,
@@ -20,22 +21,6 @@ module button_sampler #(parameter SFREQ_KHZ = 1) (
 
 endmodule
 
-// Manages button inputs
-
-// mclk: main clock, the clock from the module qlal4...( 20 MHz? )
-//
-// M_FREQ: main clock frequency, use this paramter to set main clock frequency
-//         = 1/10/100 for testing, = 20 000 000 for vaman board ( make sure all time keeping registers are 64 bit wide )
-//
-// clk_mode:
-//     == 0: if in default mode
-//     == 1: if in set time mode
-//     == 2: if in set date mode
-//     == 3: if in set alarm mode(any day alarm implementation?)
-// 
-// vButton: virtual buttons, HIGH(for 1 MCLK) when the physical button(pButton) goes from LOW to HIGH
-//           sButton[0]: units digit, sButton[1]: tens digit, 
-//
 module button_controller #(parameter MFREQ_KHZ = 1) (
     input wire mclk, input wire rst,
     input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1,
@@ -51,12 +36,9 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
     reg lsSetButton;
     reg lsAlarmButton;
 
-    // Samples buttons every 5ms to prevent bouncing of inputs
     button_sampler #(MFREQ_KHZ*5) bsampler( .mclk(mclk), .rst(rst), .pSetButton(pSetButton), .pAlarmButton(pAlarmButton), .pButton0(pButton0), .pButton1(pButton1), .sbutton({ sButton0, sButton1, sSetButton, sAlarmButton }) );
 
     always @ (posedge mclk) begin
-
-        // set vButton[0] on posedge of sButton0
         if(sButton0 && !lsButton0) begin
             lsButton0 <= 1;
             vButton[0] <= 1;
@@ -67,7 +49,6 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
         end
         else vButton[0] <= 0;
 
-        // set vButton[1] on posedge of sButton0
         if(sButton1 && !lsButton1) begin
             lsButton1 <= 1;
             vButton[1] <= 1;
@@ -78,7 +59,6 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
         end
         else vButton[1] <= 0;
 
-        // change the mode on posedge of sSetButton
         if(sSetButton && !lsSetButton) begin
             lsSetButton <= 1;
             
@@ -90,7 +70,6 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
             lsSetButton <= 0;
         end
 
-        // goto the alarm mode on posedge of sAlarmButton
         if(sAlarmButton && !lsAlarmButton) begin
             lsAlarmButton <= 1;
             
@@ -102,6 +81,39 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
         end
 
     end
+
+endmodule
+
+module test_lcd_ctrl(
+    input wire rst, output wire redled,
+    input wire pSetButton, input wire pAlarmButton, input wire pButton0, input wire pButton1,
+    output wire RS, output wire E, output wire RW,
+    output wire LCD_DB0,
+    output wire LCD_DB1,
+    output wire LCD_DB2,
+    output wire LCD_DB3,
+    output wire LCD_DB4,
+    output wire LCD_DB5,
+    output wire LCD_DB6,
+    output wire LCD_DB7
+);
+
+    reg reset = 0;
+    wire clk;
+    wire[1:0] vbutton;
+    wire[1:0] mode;
+
+    reg led;
+
+    qlal4s3b_cell_macro qlal4s3b_cell(.Sys_Clk0(clk));
+    button_controller #(20000) lcd_disp_ctrl(.mclk(clk), .rst(reset), .pSetButton(~pSetButton), .pAlarmButton(~pAlarmButton), .pButton0(~pButton0), .pButton1(~pButton1), .vButton(vbutton), .clk_mode(mode));
+
+    always @ (posedge clk) begin
+        if(vbutton[0] || vbutton[1]) led <= ~led;
+    end
+
+    assign redled = mode[0];
+    assign RS = mode[1];
 
 endmodule
 
