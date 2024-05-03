@@ -3,7 +3,7 @@
 
 // mclk: main clock, the clock from the module qlal4...( 20 MHz? )
 //
-// MFREQ_KHZ: main clock frequency in KHz, use this paramter to set main clock frequency(uses this to measure time in ms)
+// MFREQ_KHZ: main clock frequency in KHz, use this parameter to set main clock frequency(uses this to measure time in ms)
 //         = 1/10/100 for testing, = 20 000 for vaman board ( make sure all time keeping registers are 64 bit wide )
 // 
 // raiseInterrupt: Raise a interrupt [delay_ms] ms after raiseInterrupt went high

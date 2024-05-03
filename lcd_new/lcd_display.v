@@ -51,6 +51,24 @@ module lcd_controller #(parameter MFREQ_KHZ = 1, InsWaitTime = 16'd10, DataWaitT
     // instructions are executed from bottom to top
     // RS RW DB
     wire[10*INIT_CMD_LST_SIZE-1: 0] init_cmd = {
+/*
+8'b00000100,
+8'b00001110,
+8'b00001110,
+8'b00001110,
+8'b00011111,
+8'b00000000,
+8'b00000100
+*/
+        {1'b1, 1'b0, 8'h00},
+        {1'b1, 1'b0, 8'b00000100},
+        {1'b1, 1'b0, 8'b00000000},
+        {1'b1, 1'b0, 8'b00011111},
+        {1'b1, 1'b0, 8'b00001110},
+        {1'b1, 1'b0, 8'b00001110},
+        {1'b1, 1'b0, 8'b00001110},
+        {1'b1, 1'b0, 8'b00000100},
+        {1'b0, 1'b0, 8'h40},
         {1'b0, 1'b0, 8'b00000110}, 
         {1'b0, 1'b0, 8'b00001111},
         {1'b0, 1'b0, 8'b00111000}
@@ -223,9 +241,9 @@ module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, Data
     reg[127:0] lineB;
 
     // EEE, Mon, Tue, Wed, Thu, Fri, Sat, Sun
-    wire[63:0] weekdays0 = {8'h53, 8'h53, 8'h46, 8'h54, 8'h57, 8'h54, 8'h4d, 8'h45};
-    wire[63:0] weekdays1 = {8'h75, 8'h61, 8'h72, 8'h68, 8'h65, 8'h75, 8'h6f, 8'h45};
-    wire[63:0] weekdays2 = {8'h6e, 8'h74, 8'h69, 8'h75, 8'h64, 8'h65, 8'h6e, 8'h45};
+    wire[63:0] weekdays0 = {8'h53, 8'h53, 8'h46, 8'h54, 8'h57, 8'h54, 8'h4d, 8'h00};
+    wire[63:0] weekdays1 = {8'h75, 8'h61, 8'h72, 8'h68, 8'h65, 8'h75, 8'h6f, 8'h00};
+    wire[63:0] weekdays2 = {8'h6e, 8'h74, 8'h69, 8'h75, 8'h64, 8'h65, 8'h6e, 8'h00};
 
     lcd_controller #(M_FREQ, InsWaitTime, DataWaitTime, RefreshTime) lcd_ctrl(.mclk(mclk), .rst(rst), .LineA(lineA), .LineB(lineB), .E(E), .RS(RS), .RW(RW), .DB(DB));
 
@@ -332,7 +350,6 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
     end
 
 endmodule
-
 
 module test_lcd_ctrl(
     input wire rst, output wire redled,

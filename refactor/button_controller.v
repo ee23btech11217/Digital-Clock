@@ -100,7 +100,6 @@ module button_controller #(parameter MFREQ_KHZ = 1) (
         else if(!sAlarmButton && lsAlarmButton) begin
             lsAlarmButton <= 0;
         end
-
     end
 
 endmodule

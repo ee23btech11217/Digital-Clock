@@ -44,10 +44,10 @@ wire [23:0] setDate;
 wire [2:0] setWeekday;
 
 //clock 1 Hz frequency
-reg [24:0] counter; // 25-bit counter for 1Hz output from a 20MHz input clock
+reg [31:0] counter; // 32-bit counter(Just in case the frequency is higher/lower) for 1Hz output from a 20MHz input clock
 
 always @(posedge mclk) begin
-    if (counter == (20_000_000 * M_FREQ)) begin // For 20MHz input clock
+    if (counter >= M_FREQ) begin // For 20MHz input clock
         counter <= 0;
         clk1 <= ~clk1; 
     end
