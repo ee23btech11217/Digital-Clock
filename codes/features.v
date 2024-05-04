@@ -392,7 +392,7 @@ module formattime (
   wire [5:0] hour12;
   wire issetampm = 0;
 
-  assign hour24 = (clk_mode == 2'b11) ? alarm_time : clock_time;
+  assign hour24 = (clk_mode == 2'b10) ? alarm_time : clock_time;
   assign hour24Sub = hour24 - ((hour24[21:17]==5'b10000) ? 6'h18 : 6'h12); //takes care of the 9,10 bug in pm mode
   
   assign ampm = (hour24[23:16] > 8'h11); //1-->pm, 0-->am
@@ -423,7 +423,7 @@ module alarm(input clk, input rst, input [1:0] alarm_mode, input [15:0] in_time,
         end
       else
         begin
-          time_alarm <= (alarm_mode == 2'b11) ? in_time : time_alarm;
+          time_alarm <= (alarm_mode == 2'b10) ? in_time : time_alarm;
           ring <= ((in_time >= time_alarm) && (in_time < time_alarm + 16'h0001)) ? 1 : 0; 
         end
     end
