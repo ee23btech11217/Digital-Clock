@@ -41,8 +41,13 @@ wire outtime;
 wire [23:0] connectTime;
 wire [23:0] alarm_time;
 wire [23:0] clock_time;
+wire [23:0] timer_time;
+wire [23:0] timer_out;
 wire [23:0] setDate;
 wire [2:0] setWeekday;
+
+//create buttons for this!
+reg [1:0] timer_mode; //0 --> nothing 1-->set timer 2-->show timer
 
 //clock 1 Hz frequency
 reg [31:0] counter; // 32-bit counter(Just in case the frequency is higher/lower) for 1Hz output from a 20MHz input clock
@@ -58,7 +63,9 @@ always @(posedge mclk) begin
 end
 
 //12-24 hour conversion
-formattime d7 (.clk_mode(clk_mode), .setampm(vButton[3]), .clock_time(clock_time), .alarm_time(alarm_time), .bcd_time(bcd_time), .ampm(ampm));
+//used timer_mode and timer_out
+//when timer_mode is 2, displays timer_out 
+formattime d7 (.clk_mode(clk_mode), .timer_mode(timer_mode), .setampm(vButton[3]), .clock_time(clock_time), .alarm_time(alarm_time), .timer_time(timer_out), .bcd_time(bcd_time), .ampm(ampm));
 
 //counter
 settime d1 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(clk_mode), .hour1(connectTime[23:20]), .hour2(connectTime[19:16]), .min1(connectTime[15:12]), .min2(connectTime[11:8]), .sec1(connectTime[7:4]), .sec2(connectTime[3:0]), .dbg_led(dbg_led));
@@ -73,6 +80,8 @@ setdate d6 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vBu
 datemodule d5 (.clk(mclk), .hour_in(clock_time[23:16]), .date_in(setDate), .weekday_in(setWeekday), .date_mode(clk_mode), .date_out(date), .weekday_out(weekday));
 
 //timer
-
+//used timer_mode, timer_time, timer_out
+settime d8 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(timer_mode), .hour1(timer_time[23:20]), .hour2(timer_time[19:16]), .min1(timer_time[15:12]), .min2(timer_time[11:8]), .sec1(timer_time[7:4]), .sec2(timer_time[3:0]));
+timer d9 (.clk_1hz(clk1), .timer_mode(timer_mode), .time_in(timer_time), .time_out(timer_out), .buzzer(buzzer));
 
 endmodule
