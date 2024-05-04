@@ -32,7 +32,8 @@ module clock_top #(parameter M_FREQ = 1) (
     output wire ampm, //0 --> AM, 1 --> PM
     output wire[2:0] weekday,
     output wire[23:0] date,
-    output wire buzzer
+    output wire buzzer,
+    output wire[4:0] dbg_led
 );
 
 reg clk1 = 0;
@@ -60,7 +61,7 @@ end
 formattime d7 (.clk_mode(clk_mode), .setampm(vButton[3]), .clock_time(clock_time), .alarm_time(alarm_time), .bcd_time(bcd_time), .ampm(ampm));
 
 //counter
-settime d1 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(clk_mode), .hour1(connectTime[23:20]), .hour2(connectTime[19:16]), .min1(connectTime[15:12]), .min2(connectTime[11:8]), .sec1(connectTime[7:4]), .sec2(connectTime[3:0]));
+settime d1 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(clk_mode), .hour1(connectTime[23:20]), .hour2(connectTime[19:16]), .min1(connectTime[15:12]), .min2(connectTime[11:8]), .sec1(connectTime[7:4]), .sec2(connectTime[3:0]), .dbg_led(dbg_led));
 clocktime d2 (.clk_1hz(clk1), .rst(rst), .clk_mode(clk_mode), .time_in(connectTime), .time_out(clock_time));  
 
 //alarm

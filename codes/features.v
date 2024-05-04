@@ -209,12 +209,16 @@ module settime (
     output reg [3:0] min1,
     output reg [3:0] min2,
     output reg [3:0] sec1,
-    output reg [3:0] sec2 );
+    output reg [3:0] sec2,
+    output reg [4:0] dbg_led 
+  );
 
     parameter HOUR = 2'b00, MIN = 2'b01, SEC = 2'b10, DONE = 2'b11;
 
     reg [1:0] state;
     reg issetpressednow = 0;
+
+    //assign dbg_led = issetpressednow;
 
     always @(posedge clk) begin
         if (set_mode == 2'b01) begin
@@ -229,13 +233,18 @@ module settime (
                 sec2 <= 4'b0;
             end
             else begin
+                dbg_led[0] <= (state == 0);
                 case(state)
                     HOUR: begin
+                        dbg_led[1] <= 1;
                         if (button1) begin
                             hour1 <= (hour1 == 4'h2) ? 4'b0 : hour1 + 1;
+                            dbg_led[2] <= ~dbg_led[2];
+                            //dbg_led[1] <= ~dbg_led[1];
                         end
                         if (button2) begin
                             hour2 <= (hour2 == 4'h9) ? 4'b0 : hour2 + 1;
+                            //dbg_led[2] <= ~dbg_led[2];
                         end
                         if (button3) begin
                             state <= MIN;
@@ -245,9 +254,11 @@ module settime (
                     MIN: begin
                         if (button1) begin
                             min1 <= (min1 == 4'h5) ? 4'b0 : min1 + 1;
+                            //dbg_led <= ~dbg_led;
                         end
                         if (button2) begin
                             min2 <= (min2 == 4'h9) ? 4'b0 : min2 + 1;
+                            //dbg_led <= ~dbg_led;
                         end
                         if (button3) begin
                             state <= SEC;
@@ -257,9 +268,11 @@ module settime (
                     SEC: begin
                         if (button1) begin
                             sec1 <= (sec1 == 4'h5) ? 4'b0 : sec1 + 1;
+                            //dbg_led <= ~dbg_led;
                         end
                         if (button2) begin
                             sec2 <= (sec2 == 4'h9) ? 4'b0 : sec2 + 1;
+                            //dbg_led <= ~dbg_led;
                         end
                         if (button3) begin
                             state <= HOUR;
@@ -271,6 +284,8 @@ module settime (
         end
         else if (set_mode == 2'b00) begin
             issetpressednow <= 0; // Reset issetpressednow flag when setting mode ends
+            dbg_led <= 0;
+            dbg_led[1] <= 0;
         end
     end
 endmodule //settime

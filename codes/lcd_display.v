@@ -23,8 +23,9 @@
 module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, DataWaitTime = 10, RefreshTime = 320) (
     input wire mclk, input wire rst, 
     output wire[7:0] DB, output wire RS, output wire E, output wire RW,
-    input wire[1:0] clk_mode, input wire[1:0] vButton,
+    input wire[1:0] clk_mode, input wire[3:0] vButton,
     output wire buzzer,
+    output wire[4:0] dbg_led
 );
 
     reg[127:0] lineA;
@@ -41,7 +42,7 @@ module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, Data
     wire[63:0] weekdays2 = {8'h45, 8'h6e, 8'h74, 8'h69, 8'h75, 8'h64, 8'h65, 8'h6e};
 
     lcd_controller #(M_FREQ, InsWaitTime, DataWaitTime, RefreshTime) lcd_ctrl(.mclk(mclk), .rst(rst), .LineA(lineA), .LineB(lineB), .E(E), .RS(RS), .RW(RW), .DB(DB));
-    clock_top #(2000) clk_top(.mclk(mclk), .rst(rst), .clk_mode(clk_mode), .vButton({1'b0, 1'b0, vButton[1:0]}), .bcd_time(bcd_time), .ampm(am_pm), .weekday(weekday), .date(date), .buzzer(buzzer));
+    clock_top #(2000) clk_top(.mclk(mclk), .rst(rst), .clk_mode(clk_mode), .vButton(vButton), .bcd_time(bcd_time), .ampm(am_pm), .weekday(weekday), .date(date), .buzzer(buzzer), .dbg_led(dbg_led));
 
     wire[23:0] week_disp = {weekdays2[8*weekday+:8], weekdays1[8*weekday+:8], weekdays0[8*weekday+:8]};
 
