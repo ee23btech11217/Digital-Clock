@@ -1,4 +1,4 @@
-module timer(input clk_1hz, input [1:0] timer_mode, input [23:0] time_in, output [23:0] time_out, output buzzer);
+module timer(input wire clk_1hz, input wire[1:0] timer_mode, input wire[23:0] time_in, output wire[23:0] time_out, output wire buzzer);
 
   //separated time signals to respective meaning
   wire [7:0] sec_in, min_in, hour_in;
@@ -477,16 +477,16 @@ module formattime (
   wire issetampm = 0;
 
   //timer_mode should be 0 for the rest of the module to work the same
-  assign hour24 = (timer_mode == 2'b10 || timer_mode == 2'b01) ? timer_time : ((clk_mode == 2'b11) ? alarm_time : clock_time);
-  assign hour24Sub = hour24 - ((hour24[21:17]==5'b10000) ? 6'h18 : 6'h12); //takes care of the 9,10 bug in pm mode
+  assign hour24 = (timer_mode == 2'b10 || timer_mode == 2'b01) ? timer_time : ((clk_mode == 2'b10) ? alarm_time : clock_time);
+  assign hour24Sub = hour24[21:16] - ((hour24[21:17] == 5'b10000) ? 6'h18 : 6'h12); // takes care of the 9,10 bug in pm mode
   
   //changed ampm conditions to display timer counting backwards
   assign ampm = (hour24[23:16] > 8'h11 && timer_mode == 0 && clk_mode == 0); //1-->pm, 0-->am
-  assign hour12 = ((hour24 == 24'h0) | (hour24 == 24'h120000)) ? 6'h12 : ((ampm) ? hour24Sub : hour24[21:16]);
+  assign hour12 = ((hour24[23:16] == 8'h00) || (hour24[23:16] == 8'h12)) ? 6'h12 : ((ampm) ? hour24Sub : hour24[21:16]);
 
-  assign issetampm = (setampm == 1) ? ~issetampm : issetampm;
+  //assign issetampm = (setampm == 1) ? ~issetampm : issetampm;
   //changed ampm conditions to display timer counting backwards
-  assign bcd_time = (issetampm && timer_mode == 0 && clk_mode == 0) ? {2'b00, hour12, hour24[15:0]} : hour24;
+  assign bcd_time = (setampm && timer_mode == 0 && clk_mode == 0) ? {2'b00, hour12, hour24[15:0]} : hour24;
 
 endmodule //formattime
 

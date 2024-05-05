@@ -18,11 +18,12 @@ set_io RW      36
 set_io RS      39
 set_io buzzer  32
 
-set_io pSetButton   33
-set_io pAlarmButton 31
-set_io pButton0     28
-set_io pButton1     26
-set_io pButton2      3
-set_io pButton3     62
+set_io pSetButton    33
+set_io pAlarmButton  31
+set_io pTimerToggle0 23
+set_io pTimerToggle1 61
+set_io pButton0      28
+set_io pButton1      26
+set_io pButton2       3
 
 

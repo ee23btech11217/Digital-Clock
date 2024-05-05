@@ -27,12 +27,13 @@
 
 module clock_top #(parameter M_FREQ = 1) (
     input wire mclk, input wire rst,
-    input wire[1:0] clk_mode, input wire [3:0] vButton,
+    input wire[1:0] clk_mode, input wire[1:0] timer_mode, input wire [5:0] vButton,
     output wire[23:0] bcd_time,
     output wire ampm, //0 --> AM, 1 --> PM
     output wire[2:0] weekday,
     output wire[23:0] date,
     output wire buzzer,
+    output wire timer_buzzer,
     output wire[4:0] dbg_led
 );
 
@@ -47,7 +48,7 @@ wire [23:0] setDate;
 wire [2:0] setWeekday;
 
 //create buttons for this!
-reg [1:0] timer_mode; //0 --> nothing 1-->set timer 2-->show timer
+//reg [1:0] timer_mode; //0 --> nothing 1-->set timer 2-->show timer
 
 //clock 1 Hz frequency
 reg [31:0] counter; // 32-bit counter(Just in case the frequency is higher/lower) for 1Hz output from a 20MHz input clock
@@ -82,6 +83,6 @@ datemodule d5 (.clk(mclk), .hour_in(clock_time[23:16]), .date_in(setDate), .week
 //timer
 //used timer_mode, timer_time, timer_out
 settime d8 (.clk(mclk), .button1(vButton[0]), .button2(vButton[1]), .button3(vButton[2]), .set_mode(timer_mode), .hour1(timer_time[23:20]), .hour2(timer_time[19:16]), .min1(timer_time[15:12]), .min2(timer_time[11:8]), .sec1(timer_time[7:4]), .sec2(timer_time[3:0]));
-timer d9 (.clk_1hz(clk1), .timer_mode(timer_mode), .time_in(timer_time), .time_out(timer_out), .buzzer(buzzer));
+timer d9 (.clk_1hz(clk1), .timer_mode(timer_mode), .time_in(timer_time), .time_out(timer_out), .buzzer(timer_buzzer));
 
 endmodule

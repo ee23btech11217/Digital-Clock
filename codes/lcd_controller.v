@@ -21,12 +21,32 @@ module lcd_controller #(parameter MFREQ_KHZ = 1, InsWaitTime = 16'd10, DataWaitT
 );
 
     reg init_bar = 0;
-    parameter INIT_CMD_LST_SIZE = 12;
+    parameter INIT_CMD_LST_SIZE = 21;
     // instructions are executed from bottom to top
     // RS RW DB
     wire[10*INIT_CMD_LST_SIZE-1: 0] init_cmd = {
+/*
+8'b00011111
+8'b00011111
+8'b00010001
+8'b00011011
+8'b00011011
+8'b00011011
+8'b00011111
+8'b00011111
+*/
+        // created new timer charecter at 1
+        {1'b1, 1'b0, 8'b00011111},
+        {1'b1, 1'b0, 8'b00011111},
+        {1'b1, 1'b0, 8'b00011011},
+        {1'b1, 1'b0, 8'b00011011},
+        {1'b1, 1'b0, 8'b00011011},
+        {1'b1, 1'b0, 8'b00010001},
+        {1'b1, 1'b0, 8'b00011111},
+        {1'b1, 1'b0, 8'b00011111},
+        {1'b0, 1'b0, 8'b01001000}, // set CG RAM address to 8
         // created new alarm charecter at 0
-        {1'b1, 1'b0, 8'h00},
+        {1'b1, 1'b0, 8'b00000000},
         {1'b1, 1'b0, 8'b00000100},
         {1'b1, 1'b0, 8'b00000000},
         {1'b1, 1'b0, 8'b00011111},
@@ -34,14 +54,14 @@ module lcd_controller #(parameter MFREQ_KHZ = 1, InsWaitTime = 16'd10, DataWaitT
         {1'b1, 1'b0, 8'b00001110},
         {1'b1, 1'b0, 8'b00001110},
         {1'b1, 1'b0, 8'b00000100},
-        {1'b0, 1'b0, 8'b01000000},
+        {1'b0, 1'b0, 8'b01000000}, // set CG RAM address to 0
         // Display Init finished
         {1'b0, 1'b0, 8'b00000110}, 
         {1'b0, 1'b0, 8'b00001100},
         {1'b0, 1'b0, 8'b00111000}
     };
 
-    reg[3:0] init_state = 0;
+    reg[4:0] init_state = 0;
     // if 0 code will send init_cmd[init_state] and set RS/RW values
     // if 1 code will send E = 1;
     reg init_substate = 0;
