@@ -202,7 +202,7 @@ module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, Data
         .E(E), .RS(RS), .RW(RW), .DB(DB)
     );
 
-    clock_top #(20000) clk_top(
+    clock_top #(6000000) clk_top(
         .mclk(mclk), .rst(rst), 
         .clk_mode(clk_mode), .timer_mode(timer_mode), .vButton(vButton), 
         .bcd_time(bcd_time), .ampm(am_pm), .weekday(weekday), .date(date), 
@@ -210,10 +210,10 @@ module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, Data
         .dbg_led(dbg_led)
     );
 
-    // EEE, Mon, Tue, Wed, Thu, Fri, Sat, Sun
-    wire[63:0] weekdays0 = {8'h45, 8'h4d, 8'h53, 8'h53, 8'h46, 8'h54, 8'h57, 8'h54};
-    wire[63:0] weekdays1 = {8'h45, 8'h6f, 8'h75, 8'h61, 8'h72, 8'h68, 8'h65, 8'h75};
-    wire[63:0] weekdays2 = {8'h45, 8'h6e, 8'h6e, 8'h74, 8'h69, 8'h75, 8'h64, 8'h65};
+    // Sun, Mon, Tue, Wed, Thu, Fri, Sat, EEE
+    wire[63:0] weekdays0 = {8'h45, 8'h53, 8'h46, 8'h54, 8'h57, 8'h54, 8'h4d, 8'h53};
+    wire[63:0] weekdays1 = {8'h45, 8'h61, 8'h72, 8'h68, 8'h65, 8'h75, 8'h6f, 8'h75};
+    wire[63:0] weekdays2 = {8'h45, 8'h74, 8'h69, 8'h75, 8'h64, 8'h65, 8'h6e, 8'h6e};
 
     wire[23:0] week_disp = {weekdays2[8*weekday+:8], weekdays1[8*weekday+:8], weekdays0[8*weekday+:8]};
 
@@ -307,7 +307,7 @@ module lcd_display_controller #(parameter M_FREQ = 1, InsWaitTime = 16'd10, Data
     wire[127:0] show_time = (vButton[3] && disp_screen == 3'b000) ? { {2{8'h20}}, 8'h4d, (am_pm) ? 8'h50 : 8'h41, time_disp[71:0], {3{8'h20}} } : { {3{8'h20}}, time_disp[71:0], {4{8'h20}} };
 
     assign lineA = scr0a | scr1a | scr2a | scr3a | scr4a | scr5a;
-    assign lineB = (disp_screen != 3'b010) ? show_time : { {3{8'h20}}, date_disp[79:0], {3{8'h20}} };
+    assign lineB = (disp_screen != 3'b010) ? show_time : { 8'h20, week_disp[23:0], 8'h20, date_disp[79:0], 8'h20 };
 
     always @ (posedge mclk) begin
         if(rst) begin

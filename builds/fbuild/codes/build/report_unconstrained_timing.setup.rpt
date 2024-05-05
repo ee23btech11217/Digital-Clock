@@ -1,0 +1,22 @@
+#Unconstrained setup timing startpoint/endpoint
+
+timing_node_id node_type node_name
+-------------- --------- ---------
+18572 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q.QD[0]
+18573 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_1.QD[0]
+18574 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_2.QD[0]
+18575 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_3.QD[0]
+18576 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_4.QD[0]
+18577 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_5.QD[0]
+18578 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_6.QD[0]
+18579 Q_FRAG lcd_disp_ctrl.clk_top.d5.hour_reg_dff_Q_7.QD[0]
+18613 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q.QEN[0]
+18614 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_1.QEN[0]
+18615 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_2.QEN[0]
+18616 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_3.QEN[0]
+18617 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_4.QEN[0]
+18618 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_5.QEN[0]
+18619 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_6.QEN[0]
+18620 Q_FRAG lcd_disp_ctrl.clk_top.d2.sec_reg_dffe_Q_7.QEN[0]
+
+#End of unconstrained setup startpoint/endpoint report

@@ -1,0 +1,2 @@
+#!/bin/bash
+ql_symbiflow -compile -d ql-eos-s3 -P PU64 -v button_controller.v clock.v features.v interrupt_controller.v lcd_controller.v lcd_display.v top.v -t test_lcd_ctrl -p quickfeather.pcf -dump binary
