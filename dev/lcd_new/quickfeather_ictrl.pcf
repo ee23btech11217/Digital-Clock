@@ -1,0 +1,4 @@
+
+set_io rst 62
+set_io redled 34
+

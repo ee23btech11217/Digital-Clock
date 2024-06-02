@@ -1,0 +1,107 @@
+#! /usr/bin/vvp
+:ivl_version "11.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision + 0;
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/system.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_sys.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_textio.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2005_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/va_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2009.vpi";
+S_0x5bfc6b15fdf0 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_0x5bfc6b15ff80 .scope module, "lcd_controller" "lcd_controller" 3 16;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "mclk";
+    .port_info 1 /INPUT 1 "rst";
+    .port_info 2 /INPUT 16 "LineA";
+    .port_info 3 /INPUT 16 "LineB";
+    .port_info 4 /OUTPUT 8 "DB";
+    .port_info 5 /OUTPUT 1 "RS";
+    .port_info 6 /OUTPUT 1 "E";
+    .port_info 7 /OUTPUT 1 "RW";
+P_0x5bfc6b186520 .param/l "DataWaitTime" 0 3 16, +C4<00000000000000000000000000001010>;
+P_0x5bfc6b186560 .param/l "InsWaitTime" 0 3 16, +C4<00000000000000000000000000001010>;
+P_0x5bfc6b1865a0 .param/l "MFREQ_KHZ" 0 3 16, +C4<00000000000000000000000000000001>;
+P_0x5bfc6b1865e0 .param/l "RefreshTime" 0 3 16, +C4<00000000000000000000000101000000>;
+o0x784c6b17f018 .functor BUFZ 8, C4<zzzzzzzz>; HiZ drive
+v0x5bfc6b160110_0 .net "DB", 7 0, o0x784c6b17f018;  0 drivers
+v0x5bfc6b1a8a50_0 .var "E", 0 0;
+o0x784c6b17f078 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10 .array "LineA", 0 15;
+v0x5bfc6b1a8b10_0 .net v0x5bfc6b1a8b10 0, 0 0, o0x784c6b17f078; 0 drivers
+o0x784c6b17f0a8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_1 .net v0x5bfc6b1a8b10 1, 0 0, o0x784c6b17f0a8; 0 drivers
+o0x784c6b17f0d8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_2 .net v0x5bfc6b1a8b10 2, 0 0, o0x784c6b17f0d8; 0 drivers
+o0x784c6b17f108 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_3 .net v0x5bfc6b1a8b10 3, 0 0, o0x784c6b17f108; 0 drivers
+o0x784c6b17f138 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_4 .net v0x5bfc6b1a8b10 4, 0 0, o0x784c6b17f138; 0 drivers
+o0x784c6b17f168 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_5 .net v0x5bfc6b1a8b10 5, 0 0, o0x784c6b17f168; 0 drivers
+o0x784c6b17f198 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_6 .net v0x5bfc6b1a8b10 6, 0 0, o0x784c6b17f198; 0 drivers
+o0x784c6b17f1c8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_7 .net v0x5bfc6b1a8b10 7, 0 0, o0x784c6b17f1c8; 0 drivers
+o0x784c6b17f1f8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_8 .net v0x5bfc6b1a8b10 8, 0 0, o0x784c6b17f1f8; 0 drivers
+o0x784c6b17f228 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_9 .net v0x5bfc6b1a8b10 9, 0 0, o0x784c6b17f228; 0 drivers
+o0x784c6b17f258 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_10 .net v0x5bfc6b1a8b10 10, 0 0, o0x784c6b17f258; 0 drivers
+o0x784c6b17f288 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_11 .net v0x5bfc6b1a8b10 11, 0 0, o0x784c6b17f288; 0 drivers
+o0x784c6b17f2b8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_12 .net v0x5bfc6b1a8b10 12, 0 0, o0x784c6b17f2b8; 0 drivers
+o0x784c6b17f2e8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_13 .net v0x5bfc6b1a8b10 13, 0 0, o0x784c6b17f2e8; 0 drivers
+o0x784c6b17f318 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_14 .net v0x5bfc6b1a8b10 14, 0 0, o0x784c6b17f318; 0 drivers
+o0x784c6b17f348 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8b10_15 .net v0x5bfc6b1a8b10 15, 0 0, o0x784c6b17f348; 0 drivers
+o0x784c6b17f378 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0 .array "LineB", 0 15;
+v0x5bfc6b1a8dc0_0 .net v0x5bfc6b1a8dc0 0, 0 0, o0x784c6b17f378; 0 drivers
+o0x784c6b17f3a8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_1 .net v0x5bfc6b1a8dc0 1, 0 0, o0x784c6b17f3a8; 0 drivers
+o0x784c6b17f3d8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_2 .net v0x5bfc6b1a8dc0 2, 0 0, o0x784c6b17f3d8; 0 drivers
+o0x784c6b17f408 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_3 .net v0x5bfc6b1a8dc0 3, 0 0, o0x784c6b17f408; 0 drivers
+o0x784c6b17f438 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_4 .net v0x5bfc6b1a8dc0 4, 0 0, o0x784c6b17f438; 0 drivers
+o0x784c6b17f468 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_5 .net v0x5bfc6b1a8dc0 5, 0 0, o0x784c6b17f468; 0 drivers
+o0x784c6b17f498 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_6 .net v0x5bfc6b1a8dc0 6, 0 0, o0x784c6b17f498; 0 drivers
+o0x784c6b17f4c8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_7 .net v0x5bfc6b1a8dc0 7, 0 0, o0x784c6b17f4c8; 0 drivers
+o0x784c6b17f4f8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_8 .net v0x5bfc6b1a8dc0 8, 0 0, o0x784c6b17f4f8; 0 drivers
+o0x784c6b17f528 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_9 .net v0x5bfc6b1a8dc0 9, 0 0, o0x784c6b17f528; 0 drivers
+o0x784c6b17f558 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_10 .net v0x5bfc6b1a8dc0 10, 0 0, o0x784c6b17f558; 0 drivers
+o0x784c6b17f588 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_11 .net v0x5bfc6b1a8dc0 11, 0 0, o0x784c6b17f588; 0 drivers
+o0x784c6b17f5b8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_12 .net v0x5bfc6b1a8dc0 12, 0 0, o0x784c6b17f5b8; 0 drivers
+o0x784c6b17f5e8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_13 .net v0x5bfc6b1a8dc0 13, 0 0, o0x784c6b17f5e8; 0 drivers
+o0x784c6b17f618 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_14 .net v0x5bfc6b1a8dc0 14, 0 0, o0x784c6b17f618; 0 drivers
+o0x784c6b17f648 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a8dc0_15 .net v0x5bfc6b1a8dc0 15, 0 0, o0x784c6b17f648; 0 drivers
+v0x5bfc6b1a9060_0 .var "RS", 0 0;
+v0x5bfc6b1a9170_0 .var "RW", 0 0;
+o0x784c6b17f6d8 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a9230_0 .net "mclk", 0 0, o0x784c6b17f6d8;  0 drivers
+o0x784c6b17f708 .functor BUFZ 1, C4<z>; HiZ drive
+v0x5bfc6b1a92f0_0 .net "rst", 0 0, o0x784c6b17f708;  0 drivers
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "-";
+    "lcd_controller.v";
